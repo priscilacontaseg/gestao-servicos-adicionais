@@ -132,6 +132,12 @@ SETOR_OPCOES = {
     "Pessoal": "pessoal",
     "Contabil": "contabil",
 }
+AVISOS_CLIENTE_OPCOES = {
+    "2x": 2,
+    "3x": 3,
+    "4x": 4,
+    "5x ou mais": 5,
+}
 
 
 def normalizar_digitos(texto: str) -> str:
@@ -300,6 +306,13 @@ with tab_sistema:
             "Anexe aqui prints ou e-mails provando que o cliente ja havia sido orientado "
             "anteriormente. Obrigatorio: sem isso o caso e so assessoria, nao gera cobranca."
         )
+        avisos_label = st.selectbox(
+            "Quantas vezes o cliente foi avisado sobre essa competencia?",
+            list(AVISOS_CLIENTE_OPCOES.keys()),
+            help="Confirma que e cobranca, nao cortesia: o cliente foi avisado e nao "
+            "regularizou. Nao muda o valor sozinho - so pesa no preco se esse cliente ja "
+            "tiver historico de cobranca aceita em outras competencias.",
+        )
         anexos = st.file_uploader(
             "Provas de aviso previo",
             type=["png", "jpg", "jpeg", "pdf"],
@@ -346,6 +359,7 @@ with tab_sistema:
                     "regime_tributario": REGIME_OPCOES[regime_label],
                     "qtd_competencias": int(qtd_competencias),
                     "descricao_inconsistencia": descricao_inconsistencia,
+                    "qtd_avisos_cliente": AVISOS_CLIENTE_OPCOES[avisos_label],
                     "operador_nome": operador_nome,
                 }
                 arquivos_form = [

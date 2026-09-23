@@ -144,6 +144,7 @@ def analisar_proposta(
     regime_tributario: RegimeTributario = Form(...),
     qtd_competencias: int = Form(...),
     descricao_inconsistencia: str = Form(...),
+    qtd_avisos_cliente: int = Form(...),
     operador_nome: str = Form(...),
     anexos: List[UploadFile] = File(default=[]),
     session: Session = Depends(get_session),
@@ -151,6 +152,9 @@ def analisar_proposta(
     if not operador_nome.strip():
         raise HTTPException(400, "Informe o nome do operador.")
     operador = _buscar_ou_criar_operador(session, operador_nome)
+
+    if qtd_avisos_cliente not in (2, 3, 4, 5):
+        raise HTTPException(400, "Quantidade de avisos invalida - selecione entre 2x e 5x.")
 
     anexos_validos = [a for a in anexos if a.filename]
     if not anexos_validos:
@@ -190,7 +194,26 @@ def analisar_proposta(
                 f"'{regime_tributario.value}'. Rode o seed (app/seed.py) ou cadastre uma regra.",
             )
 
-    resultado = calcular_precificacao(regra, qtd_competencias, complexidade, tem_provas)
+    # Cliente "recorrente": ja teve proposta aceita/paga em competencia(s)
+    # diferente(s) desta antes - e o que de fato pesa no preco (nao o
+    # qtd_avisos_cliente, que e so registro/justificativa deste caso).
+    propostas_aceitas_anteriores = len(
+        session.exec(
+            select(Proposta).where(
+                Proposta.cliente_id == cliente.id,
+                Proposta.status == StatusProposta.ACEITA,
+            )
+        ).all()
+    )
+
+    resultado = calcular_precificacao(
+        regra,
+        qtd_competencias,
+        complexidade,
+        tem_provas,
+        qtd_avisos_cliente=qtd_avisos_cliente,
+        propostas_aceitas_anteriores_cliente=propostas_aceitas_anteriores,
+    )
 
     proposta = Proposta(
         numero_proposta=_gerar_numero_proposta(session),
@@ -203,6 +226,7 @@ def analisar_proposta(
         qtd_competencias=qtd_competencias,
         competencias=[f"Competencia {i + 1}" for i in range(qtd_competencias)],
         descricao_inconsistencia=descricao_inconsistencia,
+        qtd_avisos_cliente=qtd_avisos_cliente,
         regra_precificacao_id=regra.id if regra else None,
         classificacao=resultado["classificacao"],
         diagnostico_texto=resultado["diagnostico"],

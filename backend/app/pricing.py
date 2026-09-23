@@ -4,6 +4,15 @@ Formula: valor_base_competencia (por regime, tabela regras_precificacao)
          x qtd_competencias
          x multiplicador_reincidencia (da regra, aplicado se houver anexo)
          x multiplicador_complexidade (constante abaixo, Baixa/Media/Alta)
+         x multiplicador_recorrencia_cliente (+50% se o cliente ja teve 2+
+           competencias diferentes com proposta aceita/paga antes desta -
+           "cliente que mesmo pagando nunca muda e sempre cai")
+
+qtd_avisos_cliente (quantas vezes esse aviso especifico foi dado, 2 a 5+) e
+so registro/justificativa no card - nao entra na formula, decidido por
+Felipe: um cliente avisado 2x sobre a primeira vez dele no sistema ainda nao
+e "recorrente", so vira quando o padrao se repete entre competencias/epocas
+diferentes (isso sim o sistema conta sozinho, via historico de propostas).
 
 Zero uso de LLM/IA aqui - e 100% reproduzivel e auditavel.
 """
@@ -22,6 +31,12 @@ MULTIPLICADOR_COMPLEXIDADE = {
     ComplexidadeCaso.MEDIA: 1.25,
     ComplexidadeCaso.ALTA: 1.50,
 }
+
+# A partir de quantas competencias DIFERENTES ja aceitas/pagas antes o
+# cliente vira "recorrente" (na 3a vez que aparece no total: 2 anteriores +
+# esta) e passa a levar o multiplicador extra.
+LIMITE_PROPOSTAS_ACEITAS_PARA_RECORRENCIA = 2
+MULTIPLICADOR_RECORRENCIA_CLIENTE = 1.5
 
 
 class ResultadoVeredito(TypedDict):
@@ -53,6 +68,8 @@ def calcular_precificacao(
     qtd_competencias: int,
     complexidade: ComplexidadeCaso,
     tem_provas: bool,
+    qtd_avisos_cliente: Optional[int] = None,
+    propostas_aceitas_anteriores_cliente: int = 0,
 ) -> ResultadoVeredito:
     if qtd_competencias <= 0:
         return {
@@ -70,16 +87,22 @@ def calcular_precificacao(
 
     multiplicador_reincidencia = regra.multiplicador_reincidencia if tem_provas else 1.0
     multiplicador_complexidade = MULTIPLICADOR_COMPLEXIDADE[complexidade]
+    cliente_recorrente = propostas_aceitas_anteriores_cliente >= LIMITE_PROPOSTAS_ACEITAS_PARA_RECORRENCIA
+    multiplicador_recorrencia_cliente = MULTIPLICADOR_RECORRENCIA_CLIENTE if cliente_recorrente else 1.0
 
     valor_sugerido = round(
         regra.valor_base_competencia
         * qtd_competencias
         * multiplicador_reincidencia
-        * multiplicador_complexidade,
+        * multiplicador_complexidade
+        * multiplicador_recorrencia_cliente,
         2,
     )
 
     classificacao = "Retrabalho Reincidente" if tem_provas else "Caso Novo com Cobranca"
+    if cliente_recorrente:
+        classificacao += " - Cliente Recorrente"
+
     diagnostico = (
         "Caso com aviso previo documentado nos anexos. "
         f"Classificacao: {classificacao}. Complexidade: {complexidade.value}."
@@ -89,6 +112,13 @@ def calcular_precificacao(
             f"Complexidade: {complexidade.value}."
         )
     )
+    if qtd_avisos_cliente:
+        diagnostico += f" Cliente avisado {qtd_avisos_cliente}x sobre essa competencia sem regularizacao."
+    if cliente_recorrente:
+        diagnostico += (
+            f" Cliente ja teve {propostas_aceitas_anteriores_cliente} cobranca(s) aceita(s) em "
+            "competencias anteriores - valor com multiplicador de recorrencia (+50%)."
+        )
 
     return {
         "cortesia": False,

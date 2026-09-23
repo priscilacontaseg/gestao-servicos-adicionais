@@ -32,6 +32,11 @@ class Proposta(SQLModel, table=True):
     qtd_competencias: int
     competencias: List[str] = Field(sa_column=Column(JSON))
     descricao_inconsistencia: str
+    # Quantas vezes o cliente foi avisado sobre essa competencia antes deste
+    # caso (2 a 5+, escolhido pelo operador) - confirma que e cobranca, nao
+    # cortesia. Nao entra na formula de preco (so o historico entre
+    # competencias diferentes do cliente faz isso, ver pricing.py).
+    qtd_avisos_cliente: Optional[int] = None
 
     # Veredito do motor de regras (Passo 3 - "Analisar Caso")
     regra_precificacao_id: Optional[int] = Field(
