@@ -252,8 +252,9 @@ with tab_sistema:
         titulo_bloco("1", "Dados do Cliente e Caso", "Identificacao do cliente e caracteristicas do caso fiscal.")
 
         st.selectbox(
-            "Tipo de Servico", ["Malha Fiscal"], disabled=True,
-            help="Unico servico adicional disponivel no sistema por enquanto.",
+            "Tipo de Servico", ["Malha Fiscal"],
+            help="Unico servico adicional disponivel no sistema por enquanto - "
+            "mais opcoes serao liberadas aqui conforme o sistema crescer.",
         )
 
         col_razao, col_cnpj = st.columns([2, 1])
