@@ -165,16 +165,6 @@ def montar_texto_whatsapp(proposta: dict, razao_social: str, descricao: str) -> 
     )
 
 
-@st.cache_data(ttl=30)
-def buscar_operadores(api_base_url: str) -> list:
-    try:
-        resp = httpx.get(f"{api_base_url}/funcionarios", params={"cargo": "operador"}, timeout=5.0)
-        resp.raise_for_status()
-        return resp.json()
-    except httpx.HTTPError:
-        return []
-
-
 def buscar_propostas_aguardando(api_base_url: str) -> list:
     try:
         resp = httpx.get(f"{api_base_url}/propostas", params={"status": "aguardando_resposta"}, timeout=10.0)
@@ -234,22 +224,13 @@ def reiniciar_caso() -> None:
 
 
 # --------------------------------------------------------------------------
-# Sidebar - identificacao do operador (login simulado, sem auth real ainda)
+# Sidebar - identificacao do operador (digita o proprio nome, sem senha -
+# a lista de operadores cresce sozinha conforme as pessoas usam o sistema)
 # --------------------------------------------------------------------------
 with st.sidebar:
     st.subheader("Sessao")
-    operadores = buscar_operadores(API_BASE_URL)
-    operador_id = None
-    if not operadores:
-        st.warning(
-            f"Nao foi possivel carregar operadores de {API_BASE_URL}. "
-            "O backend esta rodando e com o seed (`python -m app.seed`) executado?"
-        )
-    else:
-        opcoes_operador = {f"{o['nome']} ({o['email']})": o["id"] for o in operadores}
-        escolha_operador = st.selectbox("Operador logado", list(opcoes_operador.keys()))
-        operador_id = opcoes_operador[escolha_operador]
-    st.caption("Login simulado - autenticacao real ainda nao implementada.")
+    operador_nome = st.text_input("Seu nome (operador)", placeholder="Ex: Maria")
+    st.caption("Digite seu nome - sem senha. So a aprovacao de valor pela coordenacao exige senha.")
 
 # --------------------------------------------------------------------------
 # Cabecalho
@@ -266,6 +247,11 @@ st.divider()
 # --------------------------------------------------------------------------
 with st.container(border=True):
     titulo_bloco("1", "Dados do Cliente e Caso", "Identificacao do cliente e caracteristicas do caso fiscal.")
+
+    st.selectbox(
+        "Tipo de Servico", ["Malha Fiscal"], disabled=True,
+        help="Unico servico adicional disponivel no sistema por enquanto.",
+    )
 
     col_razao, col_cnpj = st.columns([2, 1])
     with col_razao:
@@ -303,8 +289,11 @@ with st.container(border=True):
 # Bloco 2 - Anexo de provas
 # --------------------------------------------------------------------------
 with st.container(border=True):
-    titulo_bloco("2", "Anexo de Provas")
-    st.info("Anexe aqui prints ou e-mails provando que o cliente ja havia sido orientado anteriormente.")
+    titulo_bloco("2", "Anexo de Provas (obrigatorio)")
+    st.info(
+        "Anexe aqui prints ou e-mails provando que o cliente ja havia sido orientado "
+        "anteriormente. Obrigatorio: sem isso o caso e so assessoria, nao gera cobranca."
+    )
     anexos = st.file_uploader(
         "Provas de aviso previo",
         type=["png", "jpg", "jpeg", "pdf"],
@@ -330,8 +319,13 @@ with st.container(border=True):
             erros.append("CNPJ invalido - informe os 14 digitos.")
         if not descricao_inconsistencia.strip():
             erros.append("Descreva a inconsistencia fiscal identificada.")
-        if operador_id is None:
-            erros.append("Nenhum operador disponivel para assinar a proposta (veja o aviso na barra lateral).")
+        if not operador_nome.strip():
+            erros.append("Informe seu nome na barra lateral (Sessao) antes de analisar o caso.")
+        if not anexos:
+            erros.append(
+                "Anexe pelo menos uma prova de aviso previo (print, e-mail ou notificacao) - "
+                "sem isso o caso nao pode ser analisado, e so assessoria, nao gera cobranca."
+            )
 
         if erros:
             for erro in erros:
@@ -346,7 +340,7 @@ with st.container(border=True):
                 "regime_tributario": REGIME_OPCOES[regime_label],
                 "qtd_competencias": int(qtd_competencias),
                 "descricao_inconsistencia": descricao_inconsistencia,
-                "operador_id": operador_id,
+                "operador_nome": operador_nome,
             }
             arquivos_form = [
                 ("anexos", (arquivo.name, arquivo.getvalue(), arquivo.type or "application/octet-stream"))

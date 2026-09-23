@@ -4,6 +4,7 @@ from typing import List, Optional
 
 from fastapi import APIRouter, Depends, File, Form, HTTPException, Response, UploadFile
 from sqlmodel import Session, select
+from sqlalchemy import func
 
 from .. import trello_client
 from ..database import get_session
@@ -40,6 +41,32 @@ def _gerar_numero_proposta(session: Session) -> str:
     ).all()
     proximo = len(existentes) + 1
     return f"{prefixo}{proximo:04d}"
+
+
+def _buscar_ou_criar_operador(session: Session, nome: str) -> Funcionario:
+    """Operadores nao tem tela de cadastro nem senha - digitam o proprio nome
+    e o sistema reaproveita o registro se o nome ja existir (case-insensitive)
+    ou cria um novo na hora. Lista de operadores cresce organicamente."""
+    nome_normalizado = nome.strip()
+    existente = session.exec(
+        select(Funcionario).where(
+            func.lower(Funcionario.nome) == nome_normalizado.lower(),
+            Funcionario.cargo == CargoFuncionario.OPERADOR,
+        )
+    ).first()
+    if existente:
+        if not existente.ativo:
+            existente.ativo = True
+            session.add(existente)
+            session.commit()
+            session.refresh(existente)
+        return existente
+
+    novo = Funcionario(nome=nome_normalizado, cargo=CargoFuncionario.OPERADOR, ativo=True)
+    session.add(novo)
+    session.commit()
+    session.refresh(novo)
+    return novo
 
 
 def _buscar_coordenador_do_setor(session: Session, setor: Setor) -> Optional[Funcionario]:
@@ -108,13 +135,23 @@ def analisar_proposta(
     regime_tributario: RegimeTributario = Form(...),
     qtd_competencias: int = Form(...),
     descricao_inconsistencia: str = Form(...),
-    operador_id: int = Form(...),
+    operador_nome: str = Form(...),
     anexos: List[UploadFile] = File(default=[]),
     session: Session = Depends(get_session),
 ) -> Proposta:
-    operador = session.get(Funcionario, operador_id)
-    if not operador or not operador.ativo:
-        raise HTTPException(400, "Operador invalido ou inativo.")
+    if not operador_nome.strip():
+        raise HTTPException(400, "Informe o nome do operador.")
+    operador = _buscar_ou_criar_operador(session, operador_nome)
+
+    anexos_validos = [a for a in anexos if a.filename]
+    if not anexos_validos:
+        raise HTTPException(
+            400,
+            "E obrigatorio anexar pelo menos uma prova de aviso previo (print, e-mail ou "
+            "notificacao) para analisar o caso. Sem prova de que o cliente ja foi avisado "
+            "antes, o caso e so assessoria - nao gera cobranca.",
+        )
+    tem_provas = True
 
     cnpj_normalizado = _normalizar_cnpj(cnpj)
     if len(cnpj_normalizado) != 14:
@@ -133,9 +170,6 @@ def analisar_proposta(
     session.add(cliente)
     session.commit()
     session.refresh(cliente)
-
-    anexos_validos = [a for a in anexos if a.filename]
-    tem_provas = len(anexos_validos) > 0
 
     regra = None
     if qtd_competencias > 0:

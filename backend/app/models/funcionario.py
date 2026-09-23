@@ -11,8 +11,11 @@ class Funcionario(SQLModel, table=True):
     __tablename__ = "funcionarios"
 
     id: Optional[int] = Field(default=None, primary_key=True)
-    nome: str
-    email: str = Field(unique=True, index=True)
+    nome: str = Field(index=True)
+    # Operadores se auto-cadastram digitando o nome (sem tela de cadastro
+    # ainda) - por isso email fica opcional. Coordenadores/financeiro
+    # continuam com email definido no seed.py.
+    email: Optional[str] = Field(default=None, unique=True, index=True)
     cargo: CargoFuncionario
 
     # Coordenadores e operadores pertencem a um setor. Financeiro (Ana Paula) e

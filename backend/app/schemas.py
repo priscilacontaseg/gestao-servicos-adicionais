@@ -38,7 +38,7 @@ class FuncionarioPublico(SQLModel):
 
     id: int
     nome: str
-    email: str
+    email: Optional[str]
     cargo: CargoFuncionario
     setor: Optional[Setor]
     ativo: bool
