@@ -164,14 +164,21 @@ def eh_cortesia(proposta: dict) -> bool:
 
 def montar_texto_whatsapp(proposta: dict, razao_social: str, descricao: str) -> str:
     competencia_texto = f"{proposta.get('qtd_competencias', 0)} competência(s)"
+    qtd_avisos = proposta.get("qtd_avisos_cliente") or 0
+    frase_aviso = (
+        "Conforme os avisos anteriores sobre esse mesmo ponto, seguimos agora com a regularização."
+        if qtd_avisos >= 3
+        else "Conforme já orientado anteriormente sobre esse mesmo ponto, seguimos agora com a regularização."
+    )
     return (
         f"Olá! Sou da equipe Contaseg, tudo bem?\n\n"
         f"Durante a conferência da sua empresa {razao_social}, identificamos uma "
         f"inconsistência apontada pelo estado na malha fiscal, envolvendo {competencia_texto}: "
         f"{descricao.strip()}\n\n"
-        f"Esse procedimento constitui um serviço adicional.\n\n"
+        f"Esse tipo de ajuste exige refazer declarações que já haviam sido entregues, por isso é "
+        f"tratado como serviço adicional. {frase_aviso}\n\n"
         f"Valor do serviço: {formatar_moeda(proposta['valor_final'])}. Para podermos fazer o "
-        f"serviço, precisamos do seu aceite, podemos prosseguir?"
+        f"serviço, precisamos do seu aceite, podemos prosseguir ou gostaria de entender melhor?"
     )
 
 
