@@ -102,7 +102,6 @@ def _criar_cartao_e_avancar(proposta: Proposta, session: Session) -> Proposta:
 def analisar_proposta(
     razao_social: str = Form(...),
     cnpj: str = Form(...),
-    telefone_whatsapp: str = Form(...),
     setor: Setor = Form(...),
     porte_empresa: PorteEmpresa = Form(...),
     complexidade: ComplexidadeCaso = Form(...),
@@ -128,11 +127,9 @@ def analisar_proposta(
         cliente = Cliente(
             cnpj=cnpj_normalizado,
             razao_social=razao_social,
-            telefone_whatsapp=telefone_whatsapp,
         )
     else:
         cliente.razao_social = razao_social
-        cliente.telefone_whatsapp = telefone_whatsapp
     session.add(cliente)
     session.commit()
     session.refresh(cliente)

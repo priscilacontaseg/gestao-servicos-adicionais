@@ -142,11 +142,6 @@ def cnpj_valido(cnpj: str) -> bool:
     return len(normalizar_digitos(cnpj)) == 14
 
 
-def telefone_valido(telefone: str) -> bool:
-    digitos = normalizar_digitos(telefone)
-    return len(digitos) in (10, 11, 12, 13)
-
-
 def formatar_moeda(valor: float) -> str:
     texto = f"{valor:,.2f}"
     texto = texto.replace(",", "X").replace(".", ",").replace("X", ".")
@@ -278,29 +273,25 @@ with st.container(border=True):
     with col_cnpj:
         cnpj = st.text_input("CNPJ", placeholder="00.000.000/0000-00")
 
-    col_tel, col_setor = st.columns([1, 1])
-    with col_tel:
-        telefone = st.text_input("Celular do Cliente (WhatsApp, com DDD)", placeholder="(11) 91234-5678")
+    col_setor, col_porte = st.columns(2)
     with col_setor:
         setor_label = st.selectbox("Setor Responsavel", list(SETOR_OPCOES.keys()))
+    with col_porte:
+        porte_label = st.selectbox("Porte da Empresa", list(PORTE_OPCOES.keys()), help="Informativo - nao afeta o preco.")
 
-    col_qtd, col_porte = st.columns(2)
+    col_qtd, col_regime = st.columns(2)
     with col_qtd:
         qtd_competencias = st.number_input(
             "Competencias Afetadas", min_value=0, max_value=24, value=1, step=1,
             help="Use 0 quando o caso for uma cortesia, sem cobranca.",
         )
-    with col_porte:
-        porte_label = st.selectbox("Porte da Empresa", list(PORTE_OPCOES.keys()), help="Informativo - nao afeta o preco.")
-
-    col_regime, col_complexidade = st.columns(2)
     with col_regime:
         regime_label = st.selectbox("Regime Tributario", list(REGIME_OPCOES.keys()))
-    with col_complexidade:
-        complexidade_label = st.selectbox(
-            "Complexidade do Caso", list(COMPLEXIDADE_OPCOES.keys()),
-            help="Baixa = preco normal. Media = +25%. Alta = +50%.",
-        )
+
+    complexidade_label = st.selectbox(
+        "Complexidade do Caso", list(COMPLEXIDADE_OPCOES.keys()),
+        help="Baixa = preco normal. Media = +25%. Alta = +50%.",
+    )
 
     descricao_inconsistencia = st.text_area(
         "Descricao da Inconsistencia Fiscal",
@@ -337,8 +328,6 @@ with st.container(border=True):
             erros.append("Informe a Razao Social do cliente.")
         if not cnpj_valido(cnpj):
             erros.append("CNPJ invalido - informe os 14 digitos.")
-        if not telefone_valido(telefone):
-            erros.append("Telefone/WhatsApp invalido - informe DDD + numero.")
         if not descricao_inconsistencia.strip():
             erros.append("Descreva a inconsistencia fiscal identificada.")
         if operador_id is None:
@@ -351,7 +340,6 @@ with st.container(border=True):
             dados_form = {
                 "razao_social": razao_social,
                 "cnpj": cnpj,
-                "telefone_whatsapp": telefone,
                 "setor": SETOR_OPCOES[setor_label],
                 "porte_empresa": PORTE_OPCOES[porte_label],
                 "complexidade": COMPLEXIDADE_OPCOES[complexidade_label],

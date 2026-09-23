@@ -14,9 +14,6 @@ class Cliente(SQLModel, table=True):
     razao_social: str
     nome_contato: Optional[str] = None
 
-    # Formato E.164, ex: 5511999999999
-    telefone_whatsapp: str = Field(index=True)
-
     opt_in_whatsapp: bool = Field(default=False)
     opt_in_registrado_em: Optional[datetime] = None
 
