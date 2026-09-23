@@ -74,16 +74,16 @@ def calcular_precificacao(
     if qtd_competencias <= 0:
         return {
             "cortesia": True,
-            "classificacao": "Cortesia - nao gera cobranca",
+            "classificacao": "Cortesia - não gera cobrança",
             "diagnostico": (
-                "Nenhuma competencia com cobranca associada. Registre o motivo "
+                "Nenhuma competência com cobrança associada. Registre o motivo "
                 "internamente e crie uma atividade normal, sem enviar proposta ao cliente."
             ),
             "valor_sugerido": 0.0,
         }
 
     if regra is None:
-        raise ValueError("Nenhuma regra de precificacao vigente para o regime informado.")
+        raise ValueError("Nenhuma regra de precificação vigente para o regime informado.")
 
     multiplicador_reincidencia = regra.multiplicador_reincidencia if tem_provas else 1.0
     multiplicador_complexidade = MULTIPLICADOR_COMPLEXIDADE[complexidade]
@@ -99,25 +99,25 @@ def calcular_precificacao(
         2,
     )
 
-    classificacao = "Retrabalho Reincidente" if tem_provas else "Caso Novo com Cobranca"
+    classificacao = "Retrabalho Reincidente" if tem_provas else "Caso Novo com Cobrança"
     if cliente_recorrente:
         classificacao += " - Cliente Recorrente"
 
     diagnostico = (
-        "Caso com aviso previo documentado nos anexos. "
-        f"Classificacao: {classificacao}. Complexidade: {complexidade.value}."
+        "Caso com aviso prévio documentado nos anexos. "
+        f"Classificação: {classificacao}. Complexidade: {complexidade.value}."
         if tem_provas
         else (
-            f"Caso sem aviso previo documentado. Classificacao: {classificacao}. "
+            f"Caso sem aviso prévio documentado. Classificação: {classificacao}. "
             f"Complexidade: {complexidade.value}."
         )
     )
     if qtd_avisos_cliente:
-        diagnostico += f" Cliente avisado {qtd_avisos_cliente}x sobre essa competencia sem regularizacao."
+        diagnostico += f" Cliente avisado {qtd_avisos_cliente}x sobre essa competência sem regularização."
     if cliente_recorrente:
         diagnostico += (
-            f" Cliente ja teve {propostas_aceitas_anteriores_cliente} cobranca(s) aceita(s) em "
-            "competencias anteriores - valor com multiplicador de recorrencia (+50%)."
+            f" Cliente já teve {propostas_aceitas_anteriores_cliente} cobrança(s) aceita(s) em "
+            "competências anteriores - valor com multiplicador de recorrência (+50%)."
         )
 
     return {

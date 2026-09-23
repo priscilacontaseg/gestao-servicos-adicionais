@@ -103,10 +103,10 @@ def _criar_cartao_e_avancar(proposta: Proposta, session: Session) -> Proposta:
         f"Proposta: {proposta.numero_proposta}\n"
         f"Cliente: {cliente.razao_social} (CNPJ {cliente.cnpj})\n"
         f"Problema identificado: {proposta.descricao_inconsistencia}\n"
-        f"Resultado da avaliacao: {proposta.classificacao}\n"
+        f"Resultado da avaliação: {proposta.classificacao}\n"
         f"Justificativa: {proposta.diagnostico_texto}\n"
         f"Valor: R$ {proposta.valor_final:.2f}\n"
-        f"Operador responsavel: {operador.nome if operador else '-'}\n"
+        f"Operador responsável: {operador.nome if operador else '-'}\n"
         f"Status: aguardando resposta do cliente (WhatsApp manual)."
     )
     # Politica da empresa: nenhum cartao pode ficar sem responsavel nem sem
@@ -154,21 +154,21 @@ def analisar_proposta(
     operador = _buscar_ou_criar_operador(session, operador_nome)
 
     if qtd_avisos_cliente not in (2, 3, 4, 5):
-        raise HTTPException(400, "Quantidade de avisos invalida - selecione entre 2x e 5x.")
+        raise HTTPException(400, "Quantidade de avisos inválida - selecione entre 2x e 5x.")
 
     anexos_validos = [a for a in anexos if a.filename]
     if not anexos_validos:
         raise HTTPException(
             400,
-            "E obrigatorio anexar pelo menos uma prova de aviso previo (print, e-mail ou "
-            "notificacao) para analisar o caso. Sem prova de que o cliente ja foi avisado "
-            "antes, o caso e so assessoria - nao gera cobranca.",
+            "É obrigatório anexar pelo menos uma prova de aviso prévio (print, e-mail ou "
+            "notificação) para analisar o caso. Sem prova de que o cliente já foi avisado "
+            "antes, o caso é só assessoria - não gera cobrança.",
         )
     tem_provas = True
 
     cnpj_normalizado = _normalizar_cnpj(cnpj)
     if len(cnpj_normalizado) != 14:
-        raise HTTPException(400, "CNPJ invalido - informe os 14 digitos.")
+        raise HTTPException(400, "CNPJ inválido - informe os 14 dígitos.")
 
     cliente = session.exec(
         select(Cliente).where(Cliente.cnpj == cnpj_normalizado)
@@ -190,7 +190,7 @@ def analisar_proposta(
         if regra is None:
             raise HTTPException(
                 400,
-                f"Nenhuma regra de precificacao vigente para o regime "
+                f"Nenhuma regra de precificação vigente para o regime "
                 f"'{regime_tributario.value}'. Rode o seed (app/seed.py) ou cadastre uma regra.",
             )
 
@@ -224,7 +224,7 @@ def analisar_proposta(
         complexidade=complexidade,
         regime_tributario=regime_tributario,
         qtd_competencias=qtd_competencias,
-        competencias=[f"Competencia {i + 1}" for i in range(qtd_competencias)],
+        competencias=[f"Competência {i + 1}" for i in range(qtd_competencias)],
         descricao_inconsistencia=descricao_inconsistencia,
         qtd_avisos_cliente=qtd_avisos_cliente,
         regra_precificacao_id=regra.id if regra else None,
@@ -261,13 +261,13 @@ def confirmar_proposta(proposta_id: int, session: Session = Depends(get_session)
     negociar manualmente com o cliente. Cria o cartao no Trello agora."""
     proposta = session.get(Proposta, proposta_id)
     if proposta is None:
-        raise HTTPException(404, "Proposta nao encontrada.")
+        raise HTTPException(404, "Proposta não encontrada.")
     if proposta.qtd_competencias <= 0:
-        raise HTTPException(400, "Proposta de cortesia nao gera negociacao com o cliente.")
+        raise HTTPException(400, "Proposta de cortesia não gera negociação com o cliente.")
     if proposta.status != StatusProposta.RASCUNHO:
         raise HTTPException(
             400,
-            f"Proposta em status '{proposta.status.value}' nao pode ser confirmada "
+            f"Proposta em status '{proposta.status.value}' não pode ser confirmada "
             "(precisa estar em 'rascunho').",
         )
     return _criar_cartao_e_avancar(proposta, session)
@@ -281,14 +281,14 @@ def solicitar_revisao(
 ) -> Proposta:
     proposta = session.get(Proposta, proposta_id)
     if proposta is None:
-        raise HTTPException(404, "Proposta nao encontrada.")
+        raise HTTPException(404, "Proposta não encontrada.")
     if not payload.motivo.strip():
-        raise HTTPException(400, "Justificativa obrigatoria para solicitar revisao.")
+        raise HTTPException(400, "Justificativa obrigatória para solicitar revisão.")
     if proposta.status != StatusProposta.RASCUNHO:
         raise HTTPException(
             400,
-            f"Proposta em status '{proposta.status.value}' nao pode ser enviada para revisao "
-            "(precisa estar em 'rascunho', logo apos a analise).",
+            f"Proposta em status '{proposta.status.value}' não pode ser enviada para revisão "
+            "(precisa estar em 'rascunho', logo após a análise).",
         )
 
     proposta.status = StatusProposta.AGUARDANDO_APROVACAO_VALOR
@@ -308,20 +308,20 @@ def aprovar_valor(
 ) -> Proposta:
     proposta = session.get(Proposta, proposta_id)
     if proposta is None:
-        raise HTTPException(404, "Proposta nao encontrada.")
+        raise HTTPException(404, "Proposta não encontrada.")
     if proposta.status != StatusProposta.AGUARDANDO_APROVACAO_VALOR:
         raise HTTPException(
             400,
-            f"Proposta em status '{proposta.status.value}' nao esta aguardando "
-            "aprovacao de valor.",
+            f"Proposta em status '{proposta.status.value}' não está aguardando "
+            "aprovação de valor.",
         )
 
     aprovador = session.get(Funcionario, payload.funcionario_id)
     if not aprovador or not aprovador.ativo:
-        raise HTTPException(400, "Funcionario aprovador invalido ou inativo.")
+        raise HTTPException(400, "Funcionário aprovador inválido ou inativo.")
 
     if not verificar_senha(payload.senha, aprovador.senha_hash):
-        raise HTTPException(401, "Senha de assinatura eletronica incorreta.")
+        raise HTTPException(401, "Senha de assinatura eletrônica incorreta.")
 
     tem_alcada = aprovador.cargo == CargoFuncionario.GESTOR or (
         aprovador.cargo == CargoFuncionario.COORDENADOR
@@ -331,12 +331,12 @@ def aprovar_valor(
         raise HTTPException(
             403,
             f"{aprovador.nome} (cargo={aprovador.cargo.value}, setor="
-            f"{aprovador.setor.value if aprovador.setor else '-'}) nao tem alcada para "
+            f"{aprovador.setor.value if aprovador.setor else '-'}) não tem alçada para "
             f"aprovar valores do setor '{proposta.setor.value}'.",
         )
 
     if not payload.motivo_ajuste.strip():
-        raise HTTPException(400, "Justificativa do ajuste e obrigatoria.")
+        raise HTTPException(400, "Justificativa do ajuste é obrigatória.")
 
     proposta.valor_final = payload.valor_final
     proposta.ajustado_por_id = aprovador.id
@@ -360,16 +360,16 @@ def registrar_resposta(
     conforme o caso, um novo membro)."""
     proposta = session.get(Proposta, proposta_id)
     if proposta is None:
-        raise HTTPException(404, "Proposta nao encontrada.")
+        raise HTTPException(404, "Proposta não encontrada.")
     if proposta.status != StatusProposta.AGUARDANDO_RESPOSTA:
         raise HTTPException(
             400,
-            f"Proposta em status '{proposta.status.value}' nao esta aguardando resposta do cliente.",
+            f"Proposta em status '{proposta.status.value}' não está aguardando resposta do cliente.",
         )
 
     agora = agora_utc()
     valor = proposta.valor_final or 0.0
-    data_hora_texto = agora.strftime("%d/%m/%Y as %Hh%M")
+    data_hora_texto = agora.strftime("%d/%m/%Y às %Hh%M")
 
     if payload.resposta == RespostaCliente.ACEITO:
         ana = session.exec(
@@ -379,7 +379,7 @@ def registrar_resposta(
         ).first()
         comentario = (
             f"{_mencao(ana)} Cliente aceitou a proposta de R$ {valor:.2f} em "
-            f"{data_hora_texto}. Favor incluir na cobranca."
+            f"{data_hora_texto}. Favor incluir na cobrança."
         )
         if proposta.trello_card_id:
             trello_client.adicionar_comentario(proposta.trello_card_id, comentario)
@@ -390,13 +390,13 @@ def registrar_resposta(
     elif payload.resposta == RespostaCliente.NAO_ACEITO:
         coordenador = _buscar_coordenador_do_setor(session, proposta.setor)
         prazo_texto = (
-            proposta.prazo_fiscal.strftime("%d/%m/%Y") if proposta.prazo_fiscal else "nao informado"
+            proposta.prazo_fiscal.strftime("%d/%m/%Y") if proposta.prazo_fiscal else "não informado"
         )
         comentario = (
             f"{_mencao(coordenador)} Cliente recusou a proposta de R$ {valor:.2f} em "
-            f"{data_hora_texto}. A inconsistencia permanece sem correcao. Prazo fiscal: "
-            f"{prazo_texto}. Risco de multa se nao regularizado. Favor decidir: cortesia "
-            f"excepcional, nova negociacao ou formalizacao do risco ao cliente."
+            f"{data_hora_texto}. A inconsistência permanece sem correção. Prazo fiscal: "
+            f"{prazo_texto}. Risco de multa se não regularizado. Favor decidir: cortesia "
+            f"excepcional, nova negociação ou formalização do risco ao cliente."
         )
         if proposta.trello_card_id:
             trello_client.adicionar_comentario(proposta.trello_card_id, comentario)
@@ -407,7 +407,7 @@ def registrar_resposta(
     else:  # FALAR_COM_RESPONSAVEL
         operador = session.get(Funcionario, proposta.operador_id)
         comentario = (
-            f"Cliente pediu para falar com o responsavel antes de decidir (registrado em "
+            f"Cliente pediu para falar com o responsável antes de decidir (registrado em "
             f"{data_hora_texto}). {operador.nome if operador else 'Operador'} deve assumir "
             "o contato manualmente."
         )
@@ -430,7 +430,7 @@ def obter_proposta_detalhe(proposta_id: int, session: Session = Depends(get_sess
     sugerido, competencias, justificativa do operador) + lista de anexos."""
     proposta = session.get(Proposta, proposta_id)
     if proposta is None:
-        raise HTTPException(404, "Proposta nao encontrada.")
+        raise HTTPException(404, "Proposta não encontrada.")
     cliente = session.get(Cliente, proposta.cliente_id)
     operador = session.get(Funcionario, proposta.operador_id)
     anexos = session.exec(
@@ -454,7 +454,7 @@ def obter_proposta_detalhe(proposta_id: int, session: Session = Depends(get_sess
 def baixar_anexo(proposta_id: int, anexo_id: int, session: Session = Depends(get_session)) -> Response:
     anexo = session.get(AnexoProposta, anexo_id)
     if anexo is None or anexo.proposta_id != proposta_id:
-        raise HTTPException(404, "Anexo nao encontrado.")
+        raise HTTPException(404, "Anexo não encontrado.")
     return Response(
         content=anexo.conteudo,
         media_type=anexo.tipo_mime,

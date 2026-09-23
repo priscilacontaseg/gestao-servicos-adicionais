@@ -1,10 +1,10 @@
-"""Gestao de Servicos Adicionais - tela do operador (pericia de campo).
+"""Gestão de Serviços Adicionais - tela do operador (perícia de campo).
 
-Fluxo: dados do caso -> provas -> veredito do motor de regras -> confirmacao
-(cria o cartao no Trello) -> texto pronto pra copiar e mandar manualmente no
-WhatsApp comum. Depois, a secao "Propostas em Negociacao" deixa o operador
-dar baixa manual na resposta do cliente (aceite/recusa/duvida), o que
-atualiza o cartao do Trello via comentario - sem nenhuma API do WhatsApp.
+Fluxo: dados do caso -> provas -> veredito do motor de regras -> confirmação
+(cria o cartão no Trello) -> texto pronto pra copiar e mandar manualmente no
+WhatsApp comum. Depois, a seção "Propostas em Negociação" deixa o operador
+dar baixa manual na resposta do cliente (aceite/recusa/dúvida), o que
+atualiza o cartão do Trello via comentário - sem nenhuma API do WhatsApp.
 """
 
 import os
@@ -18,15 +18,15 @@ from backend_bootstrap import garantir_backend_rodando
 API_BASE_URL = os.getenv("API_BASE_URL", "http://localhost:8000")
 
 st.set_page_config(
-    page_title="Gestao de Servicos Adicionais",
+    page_title="Gestão de Serviços Adicionais",
     page_icon="\U0001f4cb",
     layout="centered",
 )
 
 if not garantir_backend_rodando():
     st.error(
-        "O backend nao respondeu a tempo. Recarregue a pagina em alguns segundos "
-        "(no Streamlit Cloud o primeiro carregamento apos o app dormir demora um pouco)."
+        "O backend não respondeu a tempo. Recarregue a página em alguns segundos "
+        "(no Streamlit Cloud o primeiro carregamento após o app dormir demora um pouco)."
     )
     st.stop()
 
@@ -66,6 +66,10 @@ st.markdown(
         padding: 1.2rem 1.4rem;
         margin: 0.6rem 0 1rem 0;
         border-left: 6px solid;
+        color: #111827;
+    }
+    .painel-veredito * {
+        color: #111827 !important;
     }
     .painel-cobranca {
         background-color: #ecfdf5;
@@ -82,7 +86,7 @@ st.markdown(
     }
     .painel-tag {
         display: inline-block;
-        background-color: rgba(0,0,0,0.06);
+        background-color: rgba(0,0,0,0.08);
         border-radius: 999px;
         padding: 0.15rem 0.7rem;
         font-size: 0.82rem;
@@ -114,11 +118,11 @@ def titulo_bloco(numero: str, titulo: str, subtitulo: str = "") -> None:
 PORTE_OPCOES = {
     "Microempresa": "microempresa",
     "Empresa de Pequeno Porte (EPP)": "pequeno_porte",
-    "Medio/Grande Porte": "medio_grande",
+    "Médio/Grande Porte": "medio_grande",
 }
 COMPLEXIDADE_OPCOES = {
     "Baixa": "baixa",
-    "Media (+25%)": "media",
+    "Média (+25%)": "media",
     "Alta (+50%)": "alta",
 }
 REGIME_OPCOES = {
@@ -130,7 +134,7 @@ SETOR_OPCOES = {
     "Fiscal": "fiscal",
     "Simples Nacional": "simples_nacional",
     "Pessoal": "pessoal",
-    "Contabil": "contabil",
+    "Contábil": "contabil",
 }
 AVISOS_CLIENTE_OPCOES = {
     "2x": 2,
@@ -159,15 +163,15 @@ def eh_cortesia(proposta: dict) -> bool:
 
 
 def montar_texto_whatsapp(proposta: dict, razao_social: str, descricao: str) -> str:
-    competencia_texto = f"{proposta.get('qtd_competencias', 0)} competencia(s)"
+    competencia_texto = f"{proposta.get('qtd_competencias', 0)} competência(s)"
     return (
-        f"Ola! Sou da equipe Contaseg, tudo bem?\n\n"
-        f"Durante a conferencia da sua empresa {razao_social}, identificamos uma "
-        f"inconsistencia apontada pelo estado na malha fiscal, envolvendo {competencia_texto}: "
+        f"Olá! Sou da equipe Contaseg, tudo bem?\n\n"
+        f"Durante a conferência da sua empresa {razao_social}, identificamos uma "
+        f"inconsistência apontada pelo estado na malha fiscal, envolvendo {competencia_texto}: "
         f"{descricao.strip()}\n\n"
-        f"Esse procedimento constitui um servico adicional.\n\n"
-        f"Valor do servico: {formatar_moeda(proposta['valor_final'])}. Para podermos fazer o "
-        f"servico, precisamos do seu aceite, podemos prosseguir?"
+        f"Esse procedimento constitui um serviço adicional.\n\n"
+        f"Valor do serviço: {formatar_moeda(proposta['valor_final'])}. Para podermos fazer o "
+        f"serviço, precisamos do seu aceite, podemos prosseguir?"
     )
 
 
@@ -208,7 +212,7 @@ def buscar_detalhe_proposta(api_base_url: str, proposta_id: int) -> dict:
 
 
 # --------------------------------------------------------------------------
-# Estado da sessao
+# Estado da sessão
 # --------------------------------------------------------------------------
 for chave, valor_inicial in {
     "proposta_atual": None,
@@ -230,21 +234,21 @@ def reiniciar_caso() -> None:
 
 
 # --------------------------------------------------------------------------
-# Sidebar - identificacao do operador (digita o proprio nome, sem senha -
+# Sidebar - identificação do operador (digita o próprio nome, sem senha -
 # a lista de operadores cresce sozinha conforme as pessoas usam o sistema)
 # --------------------------------------------------------------------------
 with st.sidebar:
-    st.subheader("Sessao")
+    st.subheader("Sessão")
     operador_nome = st.text_input("Seu nome (operador)", placeholder="Ex: Maria")
-    st.caption("Digite seu nome - sem senha. So a aprovacao de valor pela coordenacao exige senha.")
+    st.caption("Digite seu nome - sem senha. Só a aprovação de valor pela coordenação exige senha.")
 
 # --------------------------------------------------------------------------
-# Cabecalho
+# Cabeçalho
 # --------------------------------------------------------------------------
-st.title("Gestao de Servicos Adicionais")
+st.title("Gestão de Serviços Adicionais")
 st.caption(
-    "Tela do operador: preencha a pericia tecnica, analise o caso, confirme a proposta e "
-    "copie o texto para mandar manualmente no WhatsApp comum - sem API, sem botoes pro cliente."
+    "Tela do operador: preencha a perícia técnica, analise o caso, confirme a proposta e "
+    "copie o texto para mandar manualmente no WhatsApp comum - sem API, sem botões pro cliente."
 )
 st.divider()
 
@@ -255,45 +259,45 @@ with tab_sistema:
     # Bloco 1 - Dados do cliente e do caso
     # ----------------------------------------------------------------------
     with st.container(border=True):
-        titulo_bloco("1", "Dados do Cliente e Caso", "Identificacao do cliente e caracteristicas do caso fiscal.")
+        titulo_bloco("1", "Dados do Cliente e Caso", "Identificação do cliente e características do caso fiscal.")
 
         st.selectbox(
-            "Tipo de Servico", ["Malha Fiscal"],
-            help="Unico servico adicional disponivel no sistema por enquanto - "
-            "mais opcoes serao liberadas aqui conforme o sistema crescer.",
+            "Tipo de Serviço", ["Malha Fiscal"],
+            help="Único serviço adicional disponível no sistema por enquanto - "
+            "mais opções serão liberadas aqui conforme o sistema crescer.",
         )
 
         col_razao, col_cnpj = st.columns([2, 1])
         with col_razao:
-            razao_social = st.text_input("Razao Social", placeholder="Ex: Empresa Exemplo LTDA")
+            razao_social = st.text_input("Razão Social", placeholder="Ex: Empresa Exemplo LTDA")
         with col_cnpj:
             cnpj = st.text_input("CNPJ", placeholder="00.000.000/0000-00")
 
         col_setor, col_porte = st.columns(2)
         with col_setor:
-            setor_label = st.selectbox("Setor Responsavel", list(SETOR_OPCOES.keys()))
+            setor_label = st.selectbox("Setor Responsável", list(SETOR_OPCOES.keys()))
         with col_porte:
             porte_label = st.selectbox(
-                "Porte da Empresa", list(PORTE_OPCOES.keys()), help="Informativo - nao afeta o preco."
+                "Porte da Empresa", list(PORTE_OPCOES.keys()), help="Informativo - não afeta o preço."
             )
 
         col_qtd, col_regime = st.columns(2)
         with col_qtd:
             qtd_competencias = st.number_input(
-                "Competencias Afetadas", min_value=0, max_value=24, value=1, step=1,
-                help="Use 0 quando o caso for uma cortesia, sem cobranca.",
+                "Competências Afetadas", min_value=0, max_value=24, value=1, step=1,
+                help="Use 0 quando o caso for uma cortesia, sem cobrança.",
             )
         with col_regime:
-            regime_label = st.selectbox("Regime Tributario", list(REGIME_OPCOES.keys()))
+            regime_label = st.selectbox("Regime Tributário", list(REGIME_OPCOES.keys()))
 
         complexidade_label = st.selectbox(
             "Complexidade do Caso", list(COMPLEXIDADE_OPCOES.keys()),
-            help="Baixa = preco normal. Media = +25%. Alta = +50%.",
+            help="Baixa = preço normal. Média = +25%. Alta = +50%.",
         )
 
         descricao_inconsistencia = st.text_area(
-            "Descricao da Inconsistencia Fiscal",
-            placeholder="Cole aqui o detalhamento tecnico do problema identificado...",
+            "Descrição da Inconsistência Fiscal",
+            placeholder="Cole aqui o detalhamento técnico do problema identificado...",
             height=140,
         )
 
@@ -301,20 +305,20 @@ with tab_sistema:
     # Bloco 2 - Anexo de provas
     # ----------------------------------------------------------------------
     with st.container(border=True):
-        titulo_bloco("2", "Anexo de Provas (obrigatorio)")
+        titulo_bloco("2", "Anexo de Provas (obrigatório)")
         st.info(
-            "Anexe aqui prints ou e-mails provando que o cliente ja havia sido orientado "
-            "anteriormente. Obrigatorio: sem isso o caso e so assessoria, nao gera cobranca."
+            "Anexe aqui prints ou e-mails provando que o cliente já havia sido orientado "
+            "anteriormente. Obrigatório: sem isso o caso é só assessoria, não gera cobrança."
         )
         avisos_label = st.selectbox(
-            "Quantas vezes o cliente foi avisado sobre essa competencia?",
+            "Quantas vezes o cliente foi avisado sobre essa competência?",
             list(AVISOS_CLIENTE_OPCOES.keys()),
-            help="Confirma que e cobranca, nao cortesia: o cliente foi avisado e nao "
-            "regularizou. Nao muda o valor sozinho - so pesa no preco se esse cliente ja "
-            "tiver historico de cobranca aceita em outras competencias.",
+            help="Confirma que é cobrança, não cortesia: o cliente foi avisado e não "
+            "regularizou. Não muda o valor sozinho - só pesa no preço se esse cliente já "
+            "tiver histórico de cobrança aceita em outras competências.",
         )
         anexos = st.file_uploader(
-            "Provas de aviso previo",
+            "Provas de aviso prévio",
             type=["png", "jpg", "jpeg", "pdf"],
             accept_multiple_files=True,
             label_visibility="collapsed",
@@ -323,27 +327,27 @@ with tab_sistema:
             st.caption(f"{len(anexos)} arquivo(s) anexado(s): " + ", ".join(a.name for a in anexos))
 
     # ----------------------------------------------------------------------
-    # Bloco 3 - Analise, veredito e confirmacao
+    # Bloco 3 - Análise, veredito e confirmação
     # ----------------------------------------------------------------------
     with st.container(border=True):
-        titulo_bloco("3", "Analise, Veredito e Confirmacao", "O motor de regras avalia o caso contra a tabela de precos oficial.")
+        titulo_bloco("3", "Análise, Veredito e Confirmação", "O motor de regras avalia o caso contra a tabela de preços oficial.")
 
-        analisar_clicado = st.button("Analisar Caso e Calcular Preco", type="primary", use_container_width=True)
+        analisar_clicado = st.button("Analisar Caso e Calcular Preço", type="primary", use_container_width=True)
 
         if analisar_clicado:
             erros = []
             if not razao_social.strip():
-                erros.append("Informe a Razao Social do cliente.")
+                erros.append("Informe a Razão Social do cliente.")
             if not cnpj_valido(cnpj):
-                erros.append("CNPJ invalido - informe os 14 digitos.")
+                erros.append("CNPJ inválido - informe os 14 dígitos.")
             if not descricao_inconsistencia.strip():
-                erros.append("Descreva a inconsistencia fiscal identificada.")
+                erros.append("Descreva a inconsistência fiscal identificada.")
             if not operador_nome.strip():
-                erros.append("Informe seu nome na barra lateral (Sessao) antes de analisar o caso.")
+                erros.append("Informe seu nome na barra lateral (Sessão) antes de analisar o caso.")
             if not anexos:
                 erros.append(
-                    "Anexe pelo menos uma prova de aviso previo (print, e-mail ou notificacao) - "
-                    "sem isso o caso nao pode ser analisado, e so assessoria, nao gera cobranca."
+                    "Anexe pelo menos uma prova de aviso prévio (print, e-mail ou notificação) - "
+                    "sem isso o caso não pode ser analisado, é só assessoria, não gera cobrança."
                 )
 
             if erros:
@@ -376,8 +380,8 @@ with tab_sistema:
                         )
                     except httpx.ConnectError:
                         st.error(
-                            f"Nao foi possivel conectar ao backend em {API_BASE_URL}. "
-                            "Confirme se o servidor FastAPI esta rodando."
+                            f"Não foi possível conectar ao backend em {API_BASE_URL}. "
+                            "Confirme se o servidor FastAPI está rodando."
                         )
                     else:
                         if resp.status_code == 200:
@@ -397,14 +401,14 @@ with tab_sistema:
         if proposta:
             cortesia = eh_cortesia(proposta)
             classe_painel = "painel-cortesia" if cortesia else "painel-cobranca"
-            tag_texto = "CORTESIA" if cortesia else "PASSIVEL DE COBRANCA"
+            tag_texto = "CORTESIA" if cortesia else "PASSÍVEL DE COBRANÇA"
 
             st.markdown(
                 f"""
                 <div class="painel-veredito {classe_painel}">
                     <span class="painel-tag">Proposta {proposta['numero_proposta']} - {tag_texto}</span>
                     <div class="painel-valor">{formatar_moeda(proposta['valor_final'])}</div>
-                    <div><b>Classificacao:</b> {proposta['classificacao']}</div>
+                    <div><b>Classificação:</b> {proposta['classificacao']}</div>
                     <div style="margin-top:0.4rem;">{proposta['diagnostico_texto']}</div>
                 </div>
                 """,
@@ -413,13 +417,13 @@ with tab_sistema:
 
             if cortesia:
                 st.warning(
-                    "Caso classificado como cortesia: nada e enviado ao cliente pelo WhatsApp. "
+                    "Caso classificado como cortesia: nada é enviado ao cliente pelo WhatsApp. "
                     "Registre o motivo internamente e crie a atividade normal do setor."
                 )
             elif proposta["status"] == "aguardando_aprovacao_valor":
                 st.info(
-                    f"Proposta aguardando aprovacao de valor pela coordenacao de "
-                    f"**{proposta['setor']}**. O operador nao tem mais acao aqui ate a decisao."
+                    f"Proposta aguardando aprovação de valor pela coordenação de "
+                    f"**{proposta['setor']}**. O operador não tem mais ação aqui até a decisão."
                 )
             elif proposta["status"] == "rascunho":
                 col_confirmar, col_revisar = st.columns(2)
@@ -428,7 +432,7 @@ with tab_sistema:
                         try:
                             resp = httpx.post(f"{API_BASE_URL}/propostas/{proposta['id']}/confirmar", timeout=15.0)
                         except httpx.ConnectError:
-                            st.error(f"Nao foi possivel conectar ao backend em {API_BASE_URL}.")
+                            st.error(f"Não foi possível conectar ao backend em {API_BASE_URL}.")
                         else:
                             if resp.status_code == 200:
                                 st.session_state.proposta_atual = resp.json()
@@ -440,22 +444,22 @@ with tab_sistema:
                                     detalhe = resp.text
                                 st.error(f"Erro do backend ({resp.status_code}): {detalhe}")
                 with col_revisar:
-                    if st.button("Solicitar Revisao de Valor a Coordenacao", use_container_width=True):
+                    if st.button("Solicitar Revisão de Valor à Coordenação", use_container_width=True):
                         st.session_state.acao_pos_analise = "revisao"
 
                 if st.session_state.acao_pos_analise == "revisao":
                     st.markdown("---")
                     st.write(
-                        f"O valor sugerido sera enviado para aprovacao da coordenacao de "
-                        f"**{proposta['setor']}**. O operador nao pode alterar o valor diretamente."
+                        f"O valor sugerido será enviado para aprovação da coordenação de "
+                        f"**{proposta['setor']}**. O operador não pode alterar o valor diretamente."
                     )
                     motivo_revisao = st.text_area(
-                        "Justifique por que voce acha que o valor esta incorreto",
-                        placeholder="Ex: cliente tem historico de bom pagador, ou caso tem particularidade nao coberta pela regra...",
+                        "Justifique por que você acha que o valor está incorreto",
+                        placeholder="Ex: cliente tem histórico de bom pagador, ou caso tem particularidade não coberta pela regra...",
                     )
-                    if st.button("Enviar Solicitacao para Coordenacao"):
+                    if st.button("Enviar Solicitação para Coordenação"):
                         if not motivo_revisao.strip():
-                            st.error("Informe a justificativa antes de enviar a solicitacao.")
+                            st.error("Informe a justificativa antes de enviar a solicitação.")
                         else:
                             try:
                                 resp = httpx.post(
@@ -464,7 +468,7 @@ with tab_sistema:
                                     timeout=15.0,
                                 )
                             except httpx.ConnectError:
-                                st.error(f"Nao foi possivel conectar ao backend em {API_BASE_URL}.")
+                                st.error(f"Não foi possível conectar ao backend em {API_BASE_URL}.")
                             else:
                                 if resp.status_code == 200:
                                     st.session_state.proposta_atual = resp.json()
@@ -478,11 +482,11 @@ with tab_sistema:
 
             elif proposta["status"] == "aguardando_resposta":
                 if proposta.get("trello_card_url"):
-                    st.success(f"Cartao criado no Trello: {proposta['trello_card_url']}")
+                    st.success(f"Cartão criado no Trello: {proposta['trello_card_url']}")
                 else:
                     st.warning(
-                        "Trello nao configurado neste ambiente (.env sem TRELLO_API_KEY/TOKEN) - "
-                        "cartao NAO foi criado de verdade, so o status avancou."
+                        "Trello não configurado neste ambiente (.env sem TRELLO_API_KEY/TOKEN) - "
+                        "cartão NÃO foi criado de verdade, só o status avançou."
                     )
 
                 texto_whatsapp = montar_texto_whatsapp(
@@ -492,7 +496,7 @@ with tab_sistema:
                 )
                 st.write("**Texto para copiar e enviar manualmente no WhatsApp:**")
                 st.code(texto_whatsapp, language=None)
-                st.caption("Sem links ou botoes - copie e cole na conversa comum com o cliente.")
+                st.caption("Sem links ou botões - copie e cole na conversa comum com o cliente.")
 
     # ----------------------------------------------------------------------
     # Reiniciar
@@ -503,18 +507,18 @@ with tab_sistema:
         st.rerun()
 
     # ----------------------------------------------------------------------
-    # Propostas em Negociacao - baixa manual da resposta do cliente
+    # Propostas em Negociação - baixa manual da resposta do cliente
     # ----------------------------------------------------------------------
     st.divider()
-    st.header("Propostas em Negociacao")
+    st.header("Propostas em Negociação")
     st.caption(
-        "Casos com proposta ja enviada manualmente pelo WhatsApp, aguardando a resposta do cliente. "
+        "Casos com proposta já enviada manualmente pelo WhatsApp, aguardando a resposta do cliente. "
         "Registre aqui o que o cliente respondeu na conversa."
     )
 
     pendentes = buscar_propostas_aguardando(API_BASE_URL)
     if pendentes is None:
-        st.warning(f"Nao foi possivel carregar as propostas pendentes de {API_BASE_URL}.")
+        st.warning(f"Não foi possível carregar as propostas pendentes de {API_BASE_URL}.")
     elif not pendentes:
         st.info("Nenhuma proposta aguardando resposta do cliente no momento.")
     else:
@@ -531,7 +535,7 @@ with tab_sistema:
         with col_recusa:
             recusa_clicado = st.button("Registrar Recusa", use_container_width=True)
         with col_duvida:
-            duvida_clicado = st.button("Cliente com Duvidas", use_container_width=True)
+            duvida_clicado = st.button("Cliente com Dúvidas", use_container_width=True)
 
         resposta_escolhida = None
         if aceite_clicado:
@@ -549,10 +553,10 @@ with tab_sistema:
                     timeout=15.0,
                 )
             except httpx.ConnectError:
-                st.error(f"Nao foi possivel conectar ao backend em {API_BASE_URL}.")
+                st.error(f"Não foi possível conectar ao backend em {API_BASE_URL}.")
             else:
                 if resp.status_code == 200:
-                    st.success(f"Resposta '{resposta_escolhida}' registrada e cartao do Trello atualizado.")
+                    st.success(f"Resposta '{resposta_escolhida}' registrada e cartão do Trello atualizado.")
                     st.rerun()
                 else:
                     try:
@@ -562,18 +566,18 @@ with tab_sistema:
                     st.error(f"Erro do backend ({resp.status_code}): {detalhe}")
 
     # ----------------------------------------------------------------------
-    # Painel da Coordenacao / Gestao - aprovacao de valor com senha de assinatura
+    # Painel da Coordenação / Gestão - aprovação de valor com senha de assinatura
     # ----------------------------------------------------------------------
     st.divider()
-    st.header("Painel da Coordenacao / Gestao")
+    st.header("Painel da Coordenação / Gestão")
     st.caption(
-        "Casos onde o operador discordou do valor calculado e pediu revisao. "
-        "So o coordenador do setor (com a propria senha) pode decidir aqui."
+        "Casos onde o operador discordou do valor calculado e pediu revisão. "
+        "Só o coordenador do setor (com a própria senha) pode decidir aqui."
     )
 
     coordenadores = buscar_coordenadores(API_BASE_URL)
     if not coordenadores:
-        st.warning(f"Nao foi possivel carregar coordenadores de {API_BASE_URL}.")
+        st.warning(f"Não foi possível carregar coordenadores de {API_BASE_URL}.")
     else:
         opcoes_coordenador = {f"{c['nome']} ({c['setor']})": c for c in coordenadores}
         escolha_coordenador = st.selectbox("Coordenador(a) logado(a)", list(opcoes_coordenador.keys()))
@@ -581,19 +585,19 @@ with tab_sistema:
 
         pendentes_aprovacao = buscar_propostas_para_aprovar(API_BASE_URL)
         if pendentes_aprovacao is None:
-            st.warning(f"Nao foi possivel carregar as propostas pendentes de aprovacao de {API_BASE_URL}.")
+            st.warning(f"Não foi possível carregar as propostas pendentes de aprovação de {API_BASE_URL}.")
         else:
             pendentes_do_setor = [p for p in pendentes_aprovacao if p["setor"] == coordenador_atual["setor"]]
 
             if not pendentes_do_setor:
-                st.info(f"Nenhuma proposta aguardando aprovacao no setor '{coordenador_atual['setor']}'.")
+                st.info(f"Nenhuma proposta aguardando aprovação no setor '{coordenador_atual['setor']}'.")
             else:
                 opcoes_aprovacao = {
                     f"{p['numero_proposta']} - {p['razao_social']} - {formatar_moeda(p['valor_final'] or 0.0)}": p["id"]
                     for p in pendentes_do_setor
                 }
                 escolha_aprovacao = st.selectbox(
-                    "Selecione o pedido de revisao", list(opcoes_aprovacao.keys()), key="aprovacao_escolha"
+                    "Selecione o pedido de revisão", list(opcoes_aprovacao.keys()), key="aprovacao_escolha"
                 )
                 proposta_aprovacao_id = opcoes_aprovacao[escolha_aprovacao]
 
@@ -603,10 +607,10 @@ with tab_sistema:
                 with col_info:
                     st.write(f"**Cliente:** {detalhe['razao_social']} (CNPJ {detalhe['cnpj']})")
                     st.write(f"**Operador:** {detalhe['operador_nome']}")
-                    st.write(f"**Competencias:** {', '.join(detalhe['competencias'])}")
+                    st.write(f"**Competências:** {', '.join(detalhe['competencias'])}")
                     st.write(f"**Valor calculado pelo motor:** {formatar_moeda(detalhe['valor_sugerido'])}")
-                    st.write(f"**Classificacao:** {detalhe['classificacao']}")
-                    st.write("**Justificativa do operador para a revisao:**")
+                    st.write(f"**Classificação:** {detalhe['classificacao']}")
+                    st.write("**Justificativa do operador para a revisão:**")
                     st.info(detalhe.get("motivo_solicitacao_revisao") or "(nenhuma justificativa registrada)")
 
                     if detalhe["anexos"]:
@@ -616,7 +620,7 @@ with tab_sistema:
                             try:
                                 conteudo = httpx.get(url_arquivo, timeout=10.0).content
                             except httpx.HTTPError:
-                                st.caption(f"Nao foi possivel carregar {anexo['nome_arquivo']}.")
+                                st.caption(f"Não foi possível carregar {anexo['nome_arquivo']}.")
                             else:
                                 if anexo["tipo_mime"].startswith("image/"):
                                     st.image(conteudo, caption=anexo["nome_arquivo"], width=250)
@@ -634,20 +638,20 @@ with tab_sistema:
                         key=f"valor_final_{proposta_aprovacao_id}",
                     )
                     motivo_ajuste_coordenador = st.text_area(
-                        "Justificativa da decisao (obrigatoria)",
-                        placeholder="Ex: mantive o valor calculado / reduzi por bom historico do cliente...",
+                        "Justificativa da decisão (obrigatória)",
+                        placeholder="Ex: mantive o valor calculado / reduzi por bom histórico do cliente...",
                         key=f"motivo_ajuste_{proposta_aprovacao_id}",
                     )
                     senha_coordenador = st.text_input(
-                        "Senha de Assinatura Eletronica", type="password",
+                        "Senha de Assinatura Eletrônica", type="password",
                         key=f"senha_{proposta_aprovacao_id}",
                     )
 
-                    if st.button("Aprovar e Criar Cartao no Trello", type="primary", use_container_width=True):
+                    if st.button("Aprovar e Criar Cartão no Trello", type="primary", use_container_width=True):
                         if not motivo_ajuste_coordenador.strip():
-                            st.error("Informe a justificativa da decisao antes de aprovar.")
+                            st.error("Informe a justificativa da decisão antes de aprovar.")
                         elif not senha_coordenador:
-                            st.error("Informe a senha de assinatura eletronica.")
+                            st.error("Informe a senha de assinatura eletrônica.")
                         else:
                             try:
                                 resp = httpx.post(
@@ -661,7 +665,7 @@ with tab_sistema:
                                     timeout=15.0,
                                 )
                             except httpx.ConnectError:
-                                st.error(f"Nao foi possivel conectar ao backend em {API_BASE_URL}.")
+                                st.error(f"Não foi possível conectar ao backend em {API_BASE_URL}.")
                             else:
                                 if resp.status_code == 200:
                                     resultado = resp.json()
@@ -670,11 +674,11 @@ with tab_sistema:
                                         f"Status: {resultado['status']}."
                                     )
                                     if resultado.get("trello_card_url"):
-                                        st.success(f"Cartao criado no Trello: {resultado['trello_card_url']}")
+                                        st.success(f"Cartão criado no Trello: {resultado['trello_card_url']}")
                                     else:
                                         st.warning(
-                                            "Trello nao configurado neste ambiente - cartao NAO foi criado de "
-                                            "verdade, so o status avancou."
+                                            "Trello não configurado neste ambiente - cartão NÃO foi criado de "
+                                            "verdade, só o status avançou."
                                         )
                                     st.rerun()
                                 else:
@@ -691,46 +695,53 @@ with tab_manual:
 
 **Passo a passo:**
 
-1. Na barra lateral (**Sessao**), digite o seu nome. Nao precisa de senha - so pra registrar quem fez a analise.
-2. Preencha os **Dados do Cliente e Caso**: Razao Social, CNPJ, Setor Responsavel, Porte, Competencias Afetadas, Regime Tributario, Complexidade e a Descricao da Inconsistencia Fiscal.
-3. **Anexe a prova de aviso previo** (print de conversa, e-mail ou notificacao mostrando que o cliente ja foi avisado antes). Isso e **obrigatorio** - sem anexo, o sistema nao deixa nem analisar o caso.
-4. Clique em **"Analisar Caso e Calcular Preco"** - o motor de regras calcula o valor automaticamente, sem ninguem decidir isso na mao.
-5. Se concordar com o valor calculado, clique em **"Confirmar Proposta"** - isso cria o cartao no Trello (controle interno) e libera o texto pronto.
-6. **Copie o texto** (tem um icone de copiar no canto do bloco de codigo) e **cole direto na conversa do WhatsApp comum** com o cliente - o sistema nao manda nada sozinho, nao tem link nem botao automatico.
-7. Depois que o cliente responder pelo WhatsApp, volte na secao **"Propostas em Negociacao"**, selecione o caso pelo nome/numero e registre o que ele respondeu: **Aceite**, **Recusa** ou **Cliente com Duvidas**.
+1. Na barra lateral (**Sessão**), digite o seu nome. Não precisa de senha - só pra registrar quem fez a análise.
+2. Preencha os **Dados do Cliente e Caso**: Razão Social, CNPJ, Setor Responsável, Porte, Competências Afetadas, Regime Tributário, Complexidade e a Descrição da Inconsistência Fiscal.
+3. **Anexe a prova de aviso prévio** (print de conversa, e-mail ou notificação mostrando que o cliente já foi avisado antes). Isso é **obrigatório** - sem anexo, o sistema não deixa nem analisar o caso.
+4. Informe **quantas vezes o cliente foi avisado** sobre essa competência (2x a 5x ou mais) - isso fica registrado como justificativa no cartão, mas não muda o valor sozinho.
+5. Clique em **"Analisar Caso e Calcular Preço"** - o motor de regras calcula o valor automaticamente, sem ninguém decidir isso na mão.
+6. Se concordar com o valor calculado, clique em **"Confirmar Proposta"** - isso cria o cartão no Trello (controle interno, sempre com prazo de 48h e responsável definido) e libera o texto pronto.
+7. **Copie o texto** (tem um ícone de copiar no canto do bloco de código) e **cole direto na conversa do WhatsApp comum** com o cliente - o sistema não manda nada sozinho, não tem link nem botão automático.
+8. Depois que o cliente responder pelo WhatsApp, volte na seção **"Propostas em Negociação"**, selecione o caso pelo nome/número e registre o que ele respondeu: **Aceite**, **Recusa** ou **Cliente com Dúvidas**.
 
 ---
 
 ### ⚠️ Casos de Cortesia
 
-Se voce colocar **0 (zero)** em "Competencias Afetadas", o sistema entende que **nao e pra cobrar** - e um caso de cortesia.
+Se você colocar **0 (zero)** em "Competências Afetadas", o sistema entende que **não é pra cobrar** - é um caso de cortesia.
 
-Nesse caso, **nao aparece nenhum texto pra copiar e nenhum cartao e criado pro cliente**. O sistema so mostra um aviso interno pra voce registrar o motivo e seguir com o atendimento normal do setor.
+Nesse caso, **não aparece nenhum texto pra copiar e nenhum cartão é criado pro cliente**. O sistema só mostra um aviso interno pra você registrar o motivo e seguir com o atendimento normal do setor.
 
-**Nao ligue nem avise o cliente que decidimos nao cobrar** - isso fica só registrado internamente.
-
----
-
-### ⚠️ Se voce achar que o valor calculado esta errado
-
-Voce **nao pode alterar o valor** diretamente - isso e proposital, pra manter o preco justo e igual pra todo mundo. Clique em **"Solicitar Revisao de Valor a Coordenacao"**, escreva o motivo, e a coordenacao do seu setor decide.
+**Não ligue nem avise o cliente que decidimos não cobrar** - isso fica só registrado internamente.
 
 ---
 
-## \U0001f9ed Para a Coordenacao
+### ⚠️ Cliente recorrente (cobrança automática mais alta)
 
-Quando um operador pede revisao de valor, o caso aparece na secao **"Painel da Coordenacao / Gestao"**, no final da tela (aba Sistema).
+Se o mesmo cliente (mesmo CNPJ) já teve proposta aceita em **duas competências diferentes antes** desta, o sistema aplica automaticamente um adicional de **+50%** no valor - é o sinal de que o cliente continua caindo em malha mesmo depois de já ter pago antes. Isso é calculado sozinho pelo sistema, você não precisa fazer nada além de preencher o caso normalmente.
+
+---
+
+### ⚠️ Se você achar que o valor calculado está errado
+
+Você **não pode alterar o valor** diretamente - isso é proposital, pra manter o preço justo e igual pra todo mundo. Clique em **"Solicitar Revisão de Valor à Coordenação"**, escreva o motivo, e a coordenação do seu setor decide.
+
+---
+
+## \U0001f9ed Para a Coordenação
+
+Quando um operador pede revisão de valor, o caso aparece na seção **"Painel da Coordenação / Gestão"**, no final da tela (aba Sistema).
 
 **Como aprovar:**
 
 1. Escolha o seu nome em **"Coordenador(a) logado(a)"**.
-2. Selecione o caso na lista (so aparecem os casos do seu setor).
-3. Confira os dados: valor calculado pelo motor, a justificativa do operador e **a prova anexada** (imagem aparece na tela, PDF vira botao de download).
+2. Selecione o caso na lista (só aparecem os casos do seu setor).
+3. Confira os dados: valor calculado pelo motor, a justificativa do operador e **a prova anexada** (imagem aparece na tela, PDF vira botão de download).
 4. Defina o **Valor Final** (pode manter o valor sugerido ou ajustar).
-5. Escreva a **Justificativa da decisao** - obrigatorio, mesmo se for so "mantive o valor calculado".
-6. Digite a sua **Senha de Assinatura Eletronica** pessoal.
-7. Clique em **"Aprovar e Criar Cartao no Trello"**.
+5. Escreva a **Justificativa da decisão** - obrigatório, mesmo se for só "mantive o valor calculado".
+6. Digite a sua **Senha de Assinatura Eletrônica** pessoal.
+7. Clique em **"Aprovar e Criar Cartão no Trello"**.
 
-Se a senha estiver errada, o sistema bloqueia e mostra um erro em vermelho - ninguem aprova nada sem a senha certa. Se voce nao tem senha cadastrada ainda, fale com quem administra o sistema.
+Se a senha estiver errada, o sistema bloqueia e mostra um erro em vermelho - ninguém aprova nada sem a senha certa. Se você não tem senha cadastrada ainda, fale com quem administra o sistema.
         """
     )
