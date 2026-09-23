@@ -1,0 +1,53 @@
+=====================================================================
+COMUNICADO 1 - GRUPO GERAL (todos os operadores)
+=====================================================================
+
+📢 Novo sistema: Gestão de Serviços Adicionais (Malha Fiscal)
+
+A partir de agora, os casos de retificação por malha fiscal (aviso
+prévio + cobrança de retrabalho) passam por esse sistema:
+
+🔗 https://gestao-servicos-adicionais-rqmsrynx56makegmb4rbwd.streamlit.app/
+
+Como usar (resumo rápido):
+1. Digite seu nome na barra lateral (não precisa senha)
+2. Preencha os dados do caso
+3. Anexe a prova de que o cliente já foi avisado antes (obrigatório -
+   sem isso o sistema não deixa analisar)
+4. Clique em "Analisar Caso" para ver o valor calculado
+5. Confirme e copie o texto pronto para mandar no WhatsApp do cliente
+6. Quando o cliente responder, volte no sistema e registre a resposta
+
+Tem um manual completo dentro do próprio sistema, na aba
+"📖 Manual de Uso e Diretrizes" (bem ao lado da aba principal).
+
+Se colocar 0 competências, o caso vira cortesia automaticamente e
+NADA é enviado ao cliente - fica só registrado internamente.
+
+Qualquer dúvida, chama a coordenação do seu setor.
+
+
+=====================================================================
+COMUNICADO 2 - COORDENAÇÃO (Marli e Gustavo)
+=====================================================================
+
+📢 Painel da Coordenação - Gestão de Serviços Adicionais
+
+O sistema novo de Serviços Adicionais (Malha Fiscal) já está no ar:
+
+🔗 https://gestao-servicos-adicionais-rqmsrynx56makegmb4rbwd.streamlit.app/
+
+Quando um operador discordar do valor calculado e pedir revisão, o
+caso aparece pra você na seção "Painel da Coordenação / Gestão", no
+final da aba "Sistema". Lá você consegue:
+
+- Ver o valor calculado pelo motor, a justificativa do operador e a
+  prova anexada (imagem aparece na tela, PDF vira botão de download)
+- Definir o valor final (manter ou ajustar)
+- Aprovar digitando sua senha de assinatura eletrônica pessoal
+
+A sua senha já foi combinada com você separadamente - se não lembrar,
+me chama no privado (não vou repetir ela por aqui nem por escrito).
+
+Tem um manual completo dentro do sistema, na aba
+"📖 Manual de Uso e Diretrizes", com o passo a passo de aprovação.
