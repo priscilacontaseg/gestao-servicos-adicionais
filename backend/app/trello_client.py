@@ -30,9 +30,17 @@ def _auth_params() -> dict:
     return {"key": TRELLO_API_KEY, "token": TRELLO_API_TOKEN}
 
 
-def criar_cartao(nome: str, descricao: str, membros_ids: Optional[list] = None) -> Optional[dict]:
+def criar_cartao(
+    nome: str,
+    descricao: str,
+    membros_ids: Optional[list] = None,
+    due: Optional[str] = None,
+) -> Optional[dict]:
     """Cria o cartao na lista fixa. Retorna {'id', 'url'} ou None se o Trello
-    nao estiver configurado (modo local/dev sem credenciais)."""
+    nao estiver configurado (modo local/dev sem credenciais).
+
+    due: data-limite em ISO 8601 (ex: "2026-09-25T16:36:00.000Z"). Politica da
+    empresa: todo cartao tem que ter data e responsavel - nunca criar sem."""
     if not configurado():
         return None
 
@@ -44,6 +52,8 @@ def criar_cartao(nome: str, descricao: str, membros_ids: Optional[list] = None) 
     }
     if membros_ids:
         payload["idMembers"] = ",".join(m for m in membros_ids if m)
+    if due:
+        payload["due"] = due
 
     resp = httpx.post(f"{TRELLO_BASE_URL}/cards", params=payload, timeout=15.0)
     resp.raise_for_status()

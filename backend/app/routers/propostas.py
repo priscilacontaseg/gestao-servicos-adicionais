@@ -1,5 +1,5 @@
 import re
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import List, Optional
 
 from fastapi import APIRouter, Depends, File, Form, HTTPException, Response, UploadFile
@@ -109,9 +109,18 @@ def _criar_cartao_e_avancar(proposta: Proposta, session: Session) -> Proposta:
         f"Operador responsavel: {operador.nome if operador else '-'}\n"
         f"Status: aguardando resposta do cliente (WhatsApp manual)."
     )
-    membros = [operador.trello_member_id] if operador and operador.trello_member_id else []
+    # Politica da empresa: nenhum cartao pode ficar sem responsavel nem sem
+    # data. Se o operador (nome livre, sem cadastro no Trello) nao tiver
+    # trello_member_id, o responsavel cai para o coordenador do setor.
+    if operador and operador.trello_member_id:
+        membros = [operador.trello_member_id]
+    else:
+        coordenador_setor = _buscar_coordenador_do_setor(session, proposta.setor)
+        membros = [coordenador_setor.trello_member_id] if coordenador_setor and coordenador_setor.trello_member_id else []
 
-    cartao = trello_client.criar_cartao(titulo, descricao, membros_ids=membros)
+    prazo_cartao = (agora_utc() + timedelta(hours=48)).strftime("%Y-%m-%dT%H:%M:%S.000Z")
+
+    cartao = trello_client.criar_cartao(titulo, descricao, membros_ids=membros, due=prazo_cartao)
     if cartao:
         proposta.trello_card_id = cartao["id"]
         proposta.trello_card_url = cartao["url"]
