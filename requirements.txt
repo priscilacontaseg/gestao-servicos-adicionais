@@ -1,0 +1,8 @@
+fastapi
+python-multipart
+streamlit
+sqlmodel
+httpx
+uvicorn[standard]
+psycopg2-binary
+python-dotenv

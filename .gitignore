@@ -1,0 +1,16 @@
+# Segredos - NUNCA versionar. So o .env.example (sem valores reais) vai pro git.
+.env
+
+# Ambiente virtual local
+.venv/
+
+# Python
+__pycache__/
+*.pyc
+
+# Banco local de desenvolvimento (SQLite) - nunca faz sentido versionar dados
+backend/dev.db
+*.db
+
+# Anexos enviados localmente (provas de aviso previo) - dados de clientes, nao codigo
+backend/app/uploads/
