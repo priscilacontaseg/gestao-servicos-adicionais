@@ -227,6 +227,7 @@ for chave, valor_inicial in {
     "texto_para_copiar": None,
     "razao_social_confirmada": None,
     "descricao_confirmada": None,
+    "resultado_aprovacao": None,
 }.items():
     if chave not in st.session_state:
         st.session_state[chave] = valor_inicial
@@ -297,6 +298,13 @@ with tab_sistema:
         with col_regime:
             regime_label = st.selectbox("Regime Tributário", list(REGIME_OPCOES.keys()))
 
+        periodo_competencias = st.text_input(
+            "Quais competências/período?",
+            placeholder="Ex: Março a Julho/2026",
+            help="Aparece no card do Trello e no resumo do caso no lugar de "
+            "\"Competência 1, 2, 3...\" - descreva o período real.",
+        )
+
         complexidade_label = st.selectbox(
             "Complexidade do Caso", list(COMPLEXIDADE_OPCOES.keys()),
             help="Baixa = preço normal. Média = +25%. Alta = +50%.",
@@ -349,6 +357,8 @@ with tab_sistema:
                 erros.append("CNPJ inválido - informe os 14 dígitos.")
             if not descricao_inconsistencia.strip():
                 erros.append("Descreva a inconsistência fiscal identificada.")
+            if qtd_competencias > 0 and not periodo_competencias.strip():
+                erros.append("Informe quais competências/período o caso envolve (ex: Março a Julho/2026).")
             if not operador_nome.strip():
                 erros.append("Informe seu nome na barra lateral (Sessão) antes de analisar o caso.")
             if not anexos:
@@ -370,6 +380,7 @@ with tab_sistema:
                     "regime_tributario": REGIME_OPCOES[regime_label],
                     "qtd_competencias": int(qtd_competencias),
                     "descricao_inconsistencia": descricao_inconsistencia,
+                    "periodo_competencias": periodo_competencias,
                     "qtd_avisos_cliente": AVISOS_CLIENTE_OPCOES[avisos_label],
                     "operador_nome": operador_nome,
                 }
@@ -582,6 +593,31 @@ with tab_sistema:
         "Só o coordenador do setor (com a própria senha) pode decidir aqui."
     )
 
+    if st.session_state.resultado_aprovacao:
+        info_aprovacao = st.session_state.resultado_aprovacao
+        prop_aprovada = info_aprovacao["proposta"]
+        st.success(
+            f"Proposta {prop_aprovada['numero_proposta']} aprovada com valor final "
+            f"{formatar_moeda(prop_aprovada['valor_final'])}. Status: {prop_aprovada['status']}."
+        )
+        if prop_aprovada.get("trello_card_url"):
+            st.success(f"Cartão criado no Trello: {prop_aprovada['trello_card_url']}")
+        else:
+            st.warning(
+                "Trello não configurado neste ambiente - cartão NÃO foi criado de verdade, "
+                "só o status avançou."
+            )
+        texto_whatsapp_aprovacao = montar_texto_whatsapp(
+            prop_aprovada, info_aprovacao["razao_social"], prop_aprovada.get("descricao_inconsistencia", "")
+        )
+        st.write("**Texto para copiar e enviar manualmente no WhatsApp:**")
+        st.code(texto_whatsapp_aprovacao, language=None)
+        st.caption("Sem links ou botões - copie e cole na conversa comum com o cliente.")
+        if st.button("Fechar aviso de aprovação"):
+            st.session_state.resultado_aprovacao = None
+            st.rerun()
+        st.divider()
+
     coordenadores = buscar_coordenadores(API_BASE_URL)
     if not coordenadores:
         st.warning(f"Não foi possível carregar coordenadores de {API_BASE_URL}.")
@@ -676,17 +712,10 @@ with tab_sistema:
                             else:
                                 if resp.status_code == 200:
                                     resultado = resp.json()
-                                    st.success(
-                                        f"Proposta aprovada com valor final {formatar_moeda(resultado['valor_final'])}. "
-                                        f"Status: {resultado['status']}."
-                                    )
-                                    if resultado.get("trello_card_url"):
-                                        st.success(f"Cartão criado no Trello: {resultado['trello_card_url']}")
-                                    else:
-                                        st.warning(
-                                            "Trello não configurado neste ambiente - cartão NÃO foi criado de "
-                                            "verdade, só o status avançou."
-                                        )
+                                    st.session_state.resultado_aprovacao = {
+                                        "proposta": resultado,
+                                        "razao_social": detalhe["razao_social"],
+                                    }
                                     st.rerun()
                                 else:
                                     try:
@@ -703,7 +732,7 @@ with tab_manual:
 **Passo a passo:**
 
 1. Na barra lateral (**Sessão**), digite o seu nome. Não precisa de senha - só pra registrar quem fez a análise.
-2. Preencha os **Dados do Cliente e Caso**: Razão Social, CNPJ, Setor Responsável, Porte, Competências Afetadas, Regime Tributário, Complexidade e a Descrição da Inconsistência Fiscal.
+2. Preencha os **Dados do Cliente e Caso**: Razão Social, CNPJ, Setor Responsável, Porte, Competências Afetadas, **qual o período real delas (ex: Março a Julho/2026)**, Regime Tributário, Complexidade e a Descrição da Inconsistência Fiscal.
 3. **Anexe a prova de aviso prévio** (print de conversa, e-mail ou notificação mostrando que o cliente já foi avisado antes). Isso é **obrigatório** - sem anexo, o sistema não deixa nem analisar o caso.
 4. Informe **quantas vezes o cliente foi avisado** sobre essa competência (2x a 5x ou mais) - isso fica registrado como justificativa no cartão, mas não muda o valor sozinho.
 5. Clique em **"Analisar Caso e Calcular Preço"** - o motor de regras calcula o valor automaticamente, sem ninguém decidir isso na mão.

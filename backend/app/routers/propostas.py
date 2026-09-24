@@ -144,6 +144,7 @@ def analisar_proposta(
     regime_tributario: RegimeTributario = Form(...),
     qtd_competencias: int = Form(...),
     descricao_inconsistencia: str = Form(...),
+    periodo_competencias: str = Form(""),
     qtd_avisos_cliente: int = Form(...),
     operador_nome: str = Form(...),
     anexos: List[UploadFile] = File(default=[]),
@@ -155,6 +156,11 @@ def analisar_proposta(
 
     if qtd_avisos_cliente not in (2, 3, 4, 5):
         raise HTTPException(400, "Quantidade de avisos inválida - selecione entre 2x e 5x.")
+
+    if qtd_competencias > 0 and not periodo_competencias.strip():
+        raise HTTPException(
+            400, "Informe quais competências/período o caso envolve (ex: Março a Julho/2026)."
+        )
 
     anexos_validos = [a for a in anexos if a.filename]
     if not anexos_validos:
@@ -224,7 +230,7 @@ def analisar_proposta(
         complexidade=complexidade,
         regime_tributario=regime_tributario,
         qtd_competencias=qtd_competencias,
-        competencias=[f"Competência {i + 1}" for i in range(qtd_competencias)],
+        competencias=[periodo_competencias.strip()] if periodo_competencias.strip() else [],
         descricao_inconsistencia=descricao_inconsistencia,
         qtd_avisos_cliente=qtd_avisos_cliente,
         regra_precificacao_id=regra.id if regra else None,
